@@ -1,5 +1,8 @@
 -- Gegenereerd door scripts/generate_seed.py — fictieve data, peildatum 2026-11-05
 begin;
+create or replace function peildatum() returns date language sql stable set search_path = ''
+as $$ select date '2026-11-05' $$;
+
 insert into vaardigheden (id, code, naam) overriding system value values
 (1, 'wp_lucht_water', 'Warmtepomp lucht-water'),
 (2, 'wp_geothermie', 'Warmtepomp geothermie'),

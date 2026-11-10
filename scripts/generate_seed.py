@@ -925,5 +925,7 @@ for t in ["medewerkers", "vaardigheden", "klanten", "artikelen", "aanvragen", "o
 
 print("-- Gegenereerd door scripts/generate_seed.py — fictieve data, peildatum " + VANDAAG.isoformat())
 print("begin;")
+print("create or replace function peildatum() returns date language sql stable set search_path = ''\n"
+      f"as $$ select date '{VANDAAG.isoformat()}' $$;\n")
 print("\n".join(out))
 print("commit;")
