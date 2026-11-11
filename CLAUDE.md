@@ -25,6 +25,43 @@ psql "$DATABASE_URL" -f supabase/seed.sql              # data laden (in één tr
 
 Controle na laden: `select * from v_facturatie_achterstand;` en `select * from v_offerte_opvolging;`.
 
+### Een nieuwe migratie testen zonder de live database te wijzigen
+
+Op een lokale Postgres 17 met pgvector (zelfde major versie als live), in een wegwerpcluster:
+
+```bash
+export LC_ALL=C                                   # anders weigert de server te starten ("became multithreaded")
+PG=/opt/homebrew/Cellar/postgresql@17/17.11_1/bin; D=$(mktemp -d)
+$PG/initdb -D "$D/data" -U postgres --no-locale -E UTF8 >/dev/null
+$PG/pg_ctl -D "$D/data" -o "-p 54329 -k '' -c listen_addresses=localhost" -l "$D/log" -w start
+$PG/createdb -h localhost -p 54329 -U postgres verbeke
+L="$PG/psql -X -q -v ON_ERROR_STOP=1 -h localhost -p 54329 -U postgres -d verbeke"
+for f in supabase/migrations/0001_schema.sql supabase/migrations/0002_peildatum.sql supabase/seed.sql; do
+  $L -f "$f"; done                                # de stand van live
+$L -A -t -F ' | ' -f scripts/vingerafdruk.sql     # vergelijk met live (read-only)
+$L -f supabase/migrations/0003_conceptfactuur.sql # de nieuwe migratie
+```
+
+**Installatie op macOS 14:** Homebrew bouwt hier alles uit broncode (`brew install postgresql@17` duurt ±20 min).
+`brew install pgvector` mislukt, omdat het de pgxs-map van postgresql@17 niet vindt zolang die keg niet gelinkt is.
+Volledig linken botst met `libpq`. Wat werkt:
+- **Symlinks:** alleen de twee versiegebonden mappen linken, `/opt/homebrew/share/postgresql@17` en
+  `/opt/homebrew/lib/postgresql@17`, naar `share/postgresql` en `lib/postgresql` in de keg.
+- **pgvector:** de bron uit de Homebrew-cache zelf bouwen met
+  `make PG_CONFIG=<keg>/bin/pg_config PGXS=<keg>/lib/postgresql/pgxs/src/makefiles/pgxs.mk PG_CPPFLAGS="-I<keg>/include/postgresql/server -I<keg>/include/postgresql/internal"`,
+  en daarna `vector.dylib` en `vector.control` plus `sql/vector--*.sql` naar die mappen kopiëren.
+- **Verbinding:** de server luistert alleen op localhost, want een Unix-socket in een lang tijdelijk pad is te lang.
+
+- **Zelfde data als live?** Draai `scripts/vingerafdruk.sql` lokaal en read-only op live. Alle rijen moeten gelijk
+  zijn.
+- **Testen:**
+  - `scripts/test_conceptfactuur.sql` (read-only, mag ook live na `db push`) moet eindigen op `ALLES GELIJK`.
+  - `scripts/test_maak_conceptfactuur.sql` schrijft in een transactie met rollback. Draai het alleen lokaal; het
+    moet eindigen op `ALLES OK`.
+- **Laag c, 2026-11-11:** lokaal identiek aan live. 92 herstellingen en 261 onderhouden, allemaal gelijk.
+  123 onderhoudsbonnen met een onderdeel.
+- **Opruimen:** `$PG/pg_ctl -D "$D/data" stop && rm -rf "$D"`.
+
 ## Architectuur
 
 - `supabase/migrations/0001_schema.sql`: het volledige datamodel. Flow: aanvraag → offerte → werf → interventies →
