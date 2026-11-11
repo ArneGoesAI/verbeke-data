@@ -81,7 +81,7 @@ Elke laag levert iets op dat zonder de volgende laag te controleren is.
 |---|---|---|---|
 | a | **Afgerond (2026-11-11).** Migratiegeschiedenis van het live project rechtzetten (`supabase migration repair`), zodat `db push` 0001 en 0002 niet opnieuw probeert | `verbeke-data` | 0001 en 0002 zijn eerst nagekeken in de live database en daarna met `migration repair` als toegepast gemarkeerd. De migratiegeschiedenis toont nu `0001 schema` en `0002 peildatum` |
 | b | Extractie plus eval, zonder app: een script dat een transcript of foto plus de interventie inleest en de gestructureerde bon teruggeeft, en dat scoort tegen de testset | eigen repo van de app | De score op artikelen, aantallen en uren is gemeten per model en per invoerweg (spraak, foto) |
-| c | SQL-functie `maak_conceptfactuur(werfbon_id)`, de view `v_werfbon_te_factureren` en de rest van migratie 0003 | `verbeke-data` | Voor bestaande bonnen geeft de functie dezelfde factuur als in de seed (onderhoud: jaarprijs, herstelling: lijnen × verkoopprijs) |
+| c | Migratie 0003 (facturatie): SQL-functie `maak_conceptfactuur(werfbon_id)`, de view `v_werfbon_te_factureren` en de herkomst van factuurlijnen | `verbeke-data` | Voor bestaande bonnen geeft de functie dezelfde factuur als in de seed (onderhoud: jaarprijs, herstelling: lijnen × verkoopprijs). Getest met `scripts/test_conceptfactuur.sql` en `scripts/test_maak_conceptfactuur.sql` |
 | d | De app: opname, voorstel, bevestiging, admin-scherm | eigen repo van de app | Een technieker kan een bon inspreken of fotograferen en de administratie ziet de conceptfactuur |
 
 Laag b komt vóór c en d omdat de modelkeuze en de kwaliteit van de extractie bepalen of de rest de moeite waard is.
@@ -141,8 +141,14 @@ stond, zodat `supabase db push` 0001 en 0002 opnieuw zou proberen. 0001 en 0002 
 database (18 tabellen, 2 views, `peildatum()` geeft 2026-11-05) en daarna met `supabase migration repair` als
 toegepast gemarkeerd. Een nieuwe migratie kan nu gewoon met `db push`.
 
-Daarna één nieuwe migratie (`0003_werfbon_app.sql`) in `verbeke-data` (laag c); 0001 blijft ongewijzigd. De app-repo
-bevat geen migraties op deze tabellen.
+Daarna twee nieuwe migraties in `verbeke-data`; 0001 blijft ongewijzigd. De app-repo bevat geen migraties op deze
+tabellen.
+
+- **`0003_conceptfactuur.sql` (laag c):** alleen facturatie, punten 4 en 6 hieronder. Een onderdeel op een
+  onderhoudsbon wordt niet aangerekend, net als in de bestaande facturen, maar komt als waarschuwing bij de
+  conceptfactuur tot het open punt in §7 beslist is. De functie zet `factuur_id` op de bon. De status blijft
+  `ingegeven` tot de administratie goedkeurt.
+- **`0004` (laag d):** punten 1, 2, 3, 5 en 7, samen met de app.
 
 1. **`werfbonnen.status`:** voeg `'concept'` toe aan de check-constraint, voor een AI-voorstel dat de technieker nog
    niet bevestigd heeft. Volgens CLAUDE.md hoort bij een nieuwe status ook een aanpassing in de generator. Die is
@@ -187,7 +193,8 @@ Ruwe schatting voor één bon:
 
 ## 7. Open punten
 
-- Nagaan of onderdelen bij onderhoud aangerekend moeten worden of in het contract zitten.
+- Nagaan of onderdelen bij onderhoud aangerekend moeten worden of in het contract zitten. Tot dan rekent
+  `maak_conceptfactuur` ze niet aan en meldt `factuurwaarschuwingen` ze.
 - Cloudprovider en EU-regio kiezen, en nagaan of Sonnet 5.5 en structured output daar beschikbaar zijn.
 - De prijzen van die provider narekenen.
 - Modelkeuze pas vastleggen na de eval in laag b, op de synthetische set en op de zelf ingesproken bonnen.
