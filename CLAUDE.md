@@ -36,11 +36,16 @@ $PG/initdb -D "$D/data" -U postgres --no-locale -E UTF8 >/dev/null
 $PG/pg_ctl -D "$D/data" -o "-p 54329 -k '' -c listen_addresses=localhost" -l "$D/log" -w start
 $PG/createdb -h localhost -p 54329 -U postgres verbeke
 L="$PG/psql -X -q -v ON_ERROR_STOP=1 -h localhost -p 54329 -U postgres -d verbeke"
-for f in supabase/migrations/0001_schema.sql supabase/migrations/0002_peildatum.sql supabase/seed.sql; do
-  $L -f "$f"; done                                # de stand van live
+for f in scripts/supabase_stubs_lokaal.sql supabase/migrations/000[123]_*.sql supabase/seed.sql; do
+  $L -f "$f"; done                                # de stand van live (stubs: rollen, auth, storage)
 $L -A -t -F ' | ' -f scripts/vingerafdruk.sql     # vergelijk met live (read-only)
-$L -f supabase/migrations/0003_conceptfactuur.sql # de nieuwe migratie
+$L -f scripts/test_0004_werfbon_app.sql           # laadt 0004 zelf in een transactie met rollback
 ```
+
+In zsh wordt `$L` niet gesplitst: gebruik daar een functie (`L() { $PG/psql ... "$@"; }`) of bash.
+`scripts/supabase_stubs_lokaal.sql` bootst de Supabase-rollen (`anon`, `authenticated`, `service_role`), hun
+standaardrechten, `auth.uid()` en `storage` minimaal na. Laad het vóór 0001, anders krijgen de tabellen niet dezelfde
+rechten als live.
 
 **Installatie op macOS 14:** Homebrew bouwt hier alles uit broncode (`brew install postgresql@17` duurt ±20 min).
 `brew install pgvector` mislukt, omdat het de pgxs-map van postgresql@17 niet vindt zolang die keg niet gelinkt is.
@@ -58,6 +63,8 @@ Volledig linken botst met `libpq`. Wat werkt:
   - `scripts/test_conceptfactuur.sql` (read-only, mag ook live na `db push`) moet eindigen op `ALLES GELIJK`.
   - `scripts/test_maak_conceptfactuur.sql` schrijft in een transactie met rollback. Draai het alleen lokaal; het
     moet eindigen op `ALLES OK`.
+  - `scripts/test_0004_werfbon_app.sql` (RLS, conceptflow, storage) schrijft in een transactie met rollback en mag
+    ook op live. Het laadt 0004 zelf als die er nog niet staat. Moet eindigen op `ALLES OK`.
 - **Laag c, 2026-11-11:** lokaal identiek aan live. 92 herstellingen en 261 onderhouden, allemaal gelijk.
   123 onderhoudsbonnen met een onderdeel.
 - **Opruimen:** `$PG/pg_ctl -D "$D/data" stop && rm -rf "$D"`.
