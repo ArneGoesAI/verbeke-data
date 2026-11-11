@@ -2,3 +2,4 @@ __pycache__/
 .env
 .env.local
 .DS_Store
+supabase/.temp/
