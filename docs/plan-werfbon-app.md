@@ -8,8 +8,8 @@ opgevraagd op 2026-11-11.
 
 ## Beslissingen
 
-1. **Bouwvolgorde in vier lagen** (zie §2): a) migratiegeschiedenis rechtzetten, b) extractie plus eval zonder app,
-   c) SQL-functie voor de conceptfactuur, d) de app.
+1. **Bouwvolgorde in vier lagen** (zie §2): a) migratiegeschiedenis rechtzetten (afgerond op 2026-11-11),
+   b) extractie plus eval zonder app, c) SQL-functie voor de conceptfactuur, d) de app.
 2. **Testset:** de bestaande bonnen worden aangevuld met een tiental bonnen die zelf ingesproken worden in het
    Vlaams, en met de hand ingevuld en gefotografeerd.
 3. **Embeddings:** Mistral wordt nog niet gebruikt voor embeddings. Het schema is er enkel op voorbereid
@@ -79,7 +79,7 @@ Elke laag levert iets op dat zonder de volgende laag te controleren is.
 
 | Laag | Wat | Waar | Klaar als |
 |---|---|---|---|
-| a | Migratiegeschiedenis van het live project rechtzetten (`supabase migration repair`), zodat `db push` 0001 en 0002 niet opnieuw probeert | `verbeke-data` | `supabase migration list` toont 0001 en 0002 als toegepast, zowel lokaal als remote |
+| a | **Afgerond (2026-11-11).** Migratiegeschiedenis van het live project rechtzetten (`supabase migration repair`), zodat `db push` 0001 en 0002 niet opnieuw probeert | `verbeke-data` | 0001 en 0002 zijn eerst nagekeken in de live database en daarna met `migration repair` als toegepast gemarkeerd. De migratiegeschiedenis toont nu `0001 schema` en `0002 peildatum` |
 | b | Extractie plus eval, zonder app: een script dat een transcript of foto plus de interventie inleest en de gestructureerde bon teruggeeft, en dat scoort tegen de testset | eigen repo van de app | De score op artikelen, aantallen en uren is gemeten per model en per invoerweg (spraak, foto) |
 | c | SQL-functie `maak_conceptfactuur(werfbon_id)`, de view `v_werfbon_te_factureren` en de rest van migratie 0003 | `verbeke-data` | Voor bestaande bonnen geeft de functie dezelfde factuur als in de seed (onderhoud: jaarprijs, herstelling: lijnen × verkoopprijs) |
 | d | De app: opname, voorstel, bevestiging, admin-scherm | eigen repo van de app | Een technieker kan een bon inspreken of fotograferen en de administratie ziet de conceptfactuur |
@@ -136,9 +136,10 @@ niet uit, maar de eval moet wel draaien op de provider en regio die in productie
 
 ## 5. Wat er in de database moet veranderen
 
-**Eerst (laag a):** de migratiegeschiedenis van het live project is leeg (`list_migrations` geeft niets terug),
-terwijl het schema wel staat. `supabase db push` zou 0001 en 0002 dus opnieuw proberen. Zet dat recht met
-`supabase migration repair` voordat er een nieuwe migratie bijkomt.
+**Laag a, afgerond op 2026-11-11:** de migratiegeschiedenis van het live project was leeg, terwijl het schema wel
+stond, zodat `supabase db push` 0001 en 0002 opnieuw zou proberen. 0001 en 0002 zijn eerst nagekeken in de live
+database (18 tabellen, 2 views, `peildatum()` geeft 2026-11-05) en daarna met `supabase migration repair` als
+toegepast gemarkeerd. Een nieuwe migratie kan nu gewoon met `db push`.
 
 Daarna één nieuwe migratie (`0003_werfbon_app.sql`) in `verbeke-data` (laag c); 0001 blijft ongewijzigd. De app-repo
 bevat geen migraties op deze tabellen.

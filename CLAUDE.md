@@ -11,7 +11,7 @@ Code, commentaar, tabel- en kolomnamen zijn in het Nederlands; houd dat zo.
 
 - **Live database:** Supabase-project `verbeke`, regio Frankfurt. Een nieuwe migratie in deze repo staat daar pas na
   `supabase db push` (of `apply_migration`); wijzig dus nooit een bestaande migratie, maar voeg een nieuwe toe.
-- **GitHub:** `arnegoesai-svg/verbeke-data`.
+- **GitHub:** `ArneGoesAI/verbeke-data`.
 
 ## Commando's
 
