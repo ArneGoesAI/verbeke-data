@@ -1,6 +1,21 @@
 # Stap 8: de werfbon-app (laag d)
 
-Status: plan, nog niets gebouwd (2026-11-11). Deel 1 is uitgewerkt, deel 2 en 3 zijn schetsen.
+Status: gebouwd (2026-11-12), nog niet online. De uitvoering staat in `verbeke-werfbon`; het plan voor deel 3 en de
+stand in `verbeke-werfbon/docs/plan-deel-3.md`.
+
+| Deel | Stand |
+|---|---|
+| 1. Migratie 0004 | **Live** (PR #9), read-only nagekeken op 2026-11-11 |
+| 2. Van opname of foto naar voorstel | **Klaar**: kern in `web/lib/verwerking/` (verbeke-werfbon PR #10), route `POST /api/verwerk` |
+| 3. Schermen | **Klaar**: inloggen, T1–T4 voor de technieker, A1 voor de administratie (verbeke-werfbon PR #11, #12 en #13) |
+
+- Getest: unit tests, read-only controles op live (`test:logins`, `test:schermen`, `test:administratie`), één echte
+  flow met een foto (`test:flow`: route, Haiku, bevestigen, conceptfactuur) en een eindtest in de browser met een
+  spraakopname, bevestigen en goedkeuren. Daarna is live opgeruimd: geen app-data meer, de twee testaccounts
+  (`technieker@verbeke.test`, `administratie@verbeke.test`) blijven bestaan.
+- Afwijkingen van de schetsen hieronder: A1 toont alleen conceptfacturen (geen lijst uit `v_werfbon_te_factureren`,
+  geen afkeuren of terugsturen); de bronzin komt uit `werfbon_opnames.extractie`, zonder extra kolom.
+- Nog open: deploy op Vercel (`fra1`), een test op een gsm, en de bevestiging van Haiku `medium` met echte bonnen.
 
 ## Context
 
@@ -140,7 +155,7 @@ Na groene test en merge van de PR: `supabase db push` vanuit `verbeke-data`, con
 dan de test nogmaals draaien zonder de `\ir` (de migratie staat er dan al) — of de test zo schrijven dat hij de
 migratie overslaat als `werfbon_opnames` al bestaat. `CLAUDE.md` en §5 van het appplan bijwerken.
 
-## Deel 2: van opname of foto naar voorstel (schets)
+## Deel 2: van opname of foto naar voorstel (schets, nu gebouwd)
 
 - **Waar:** in deze repo (`verbeke-werfbon`), als server-route van de Next.js-app op Vercel (regio `fra1`), niet als
   aparte Supabase Edge Function. Eén codebase en één plek voor de geheimen. Dit wijkt af van §3 van het appplan;
@@ -154,7 +169,7 @@ migratie overslaat als `werfbon_opnames` al bestaat. `CLAUDE.md` en §5 van het 
   Zelfde instellingen als de eval, ook `max_tokens` 2000 en geen refusal-fallback.
 - **Test:** de route draaien op een paar gevallen uit `eval/data/cases.jsonl` en vergelijken met de eval-uitvoer.
 
-## Deel 3: schermen (schets)
+## Deel 3: schermen (schets, nu gebouwd)
 
 **Eerst mockups, pas daarna code.** Statische mockups (HTML, met fictieve voorbeelddata uit de seed, zonder namen
 of telefoonnummers) van elk scherm hieronder, één voor gsm-breedte en één voor de administratie op desktop. Pas als
