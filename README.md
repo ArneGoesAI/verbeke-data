@@ -86,6 +86,10 @@ psql "$DATABASE_URL" -f supabase/seed.sql
 **Beveiliging:** Row Level Security staat op elke tabel aan, zonder policies. Enkel de service role kan dus lezen
 en schrijven. Elk project voegt zijn eigen policies toe (bijvoorbeeld: een technieker ziet enkel zijn eigen werfbonnen).
 
+**Intake (project 3):** n8n logt in als de rol `n8n_intake`. Die rol mag enkel `intake_aanvraag(...)` uitvoeren
+(migratie 0005) en kan geen tabellen lezen. Het wachtwoord zet je zelf in de SQL-editor:
+`alter role n8n_intake password '...'`.
+
 ## Data opnieuw genereren
 
 De data is reproduceerbaar (vaste random seed) met peildatum 5 november 2026.
