@@ -65,6 +65,8 @@ Volledig linken botst met `libpq`. Wat werkt:
     moet eindigen op `ALLES OK`.
   - `scripts/test_0004_werfbon_app.sql` (RLS, conceptflow, storage) schrijft in een transactie met rollback en mag
     ook op live. Het laadt 0004 zelf als die er nog niet staat. Moet eindigen op `ALLES OK`.
+  - `scripts/test_0005_intake.sql` (rol `n8n_intake`, `intake_aanvraag`) schrijft in een transactie met rollback
+    en mag ook op live. Het laadt 0005 zelf als die er nog niet staat. Moet eindigen op `ALLES OK`.
 - **Laag c, 2026-11-11:** lokaal identiek aan live. 92 herstellingen en 261 onderhouden, allemaal gelijk.
   123 onderhoudsbonnen met een onderdeel.
 - **Opruimen:** `$PG/pg_ctl -D "$D/data" stop && rm -rf "$D"`.
@@ -93,6 +95,10 @@ Volledig linken botst met `libpq`. Wat werkt:
   maakt elk project zelf aan.
 - RLS staat op elke tabel aan **zonder policies**: enkel de service role heeft toegang. Policies horen bij de
   afzonderlijke projecten, niet in deze basismigratie.
+- Intake (migratie `0005_intake_webformulier.sql`): de login-rol `n8n_intake` mag enkel
+  `intake_aanvraag(...)` uitvoeren (security definer) en heeft geen tabelrechten. Het wachtwoord staat niet in de
+  repo. Sinds 0005 kunnen `klanten.straat`, `huisnummer` en `postcode` null zijn (webformulier zonder adres), en
+  heeft `aanvragen` de kolommen `dringend` en `samenvatting`.
 
 ## Data-veiligheid
 
