@@ -135,6 +135,11 @@ select '2 rechten in de catalogus' as controle, 'ok' as resultaat;
 select to_jsonb(k) as klant_222_voor from klanten k where id = 222 \gset
 
 -- ── 3. Gedrag als n8n_intake ─────────────────
+-- Op Supabase is postgres geen superuser. Wie een rol aanmaakt, krijgt er sinds PG16 alleen ADMIN op, geen SET.
+-- "set role n8n_intake" mag dus pas na deze grant. Ze geldt enkel binnen deze transactie (rollback op het einde).
+-- inherit false: de verbindingsrol erft niets van n8n_intake.
+grant n8n_intake to current_user with inherit false, set true;
+
 :als_n8n
 select public.intake_aanvraag('Testje  Van der Test', 'Intake.Test.0005@Example.com', 'Lede',
                               'Mijn ketel is stuk en het is koud.', 'herstelling', true,
