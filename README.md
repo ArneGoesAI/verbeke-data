@@ -27,6 +27,9 @@ Ze is het fundament onder een reeks AI- en automatisatieprojecten die elk één 
 | Klantendienst: "wanneer komt de technieker?" | Geplande interventies met tijdsblok en toegewezen technieker | `interventies` + `interventie_techniekers` |
 | Kennis zit bij ervaren techniekers | Werkinstructies, veiligheidsfiches en FAQ's in `documenten`, klaar voor RAG | `document_chunks.embedding` |
 
+De ±40% geldt voor de seed. Zodra de opvolgingsworkflow van project 3 (migratie 0006) op live draait, zet ze
+`laatste_opvolging_op` bij elke herinnering, en daalt `nooit_opgevolgd` in `v_offerte_opvolging` daar. Dat is bewust.
+
 ## Datamodel
 
 ```mermaid
